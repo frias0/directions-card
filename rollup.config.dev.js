@@ -6,7 +6,7 @@ import { terser } from "rollup-plugin-terser";
 import json from '@rollup/plugin-json';
 
 export default {
-  input: ["src/boilerplate-card.ts"],
+  input: ["src/directions-card.ts"],
   output: {
     dir: "./dist",
     format: "es",
@@ -22,7 +22,7 @@ export default {
     serve({
       contentBase: "./dist",
       host: "0.0.0.0",
-      port: 5000,
+      port: 9999,
       allowCrossOrigin: true,
       headers: {
         "Access-Control-Allow-Origin": "*",

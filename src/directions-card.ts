@@ -21,14 +21,15 @@ import {
 
 import './editor';
 
-import type { BoilerplateCardConfig } from './types';
+import type { DirectionsCardConfig } from './types';
 import { actionHandler } from './action-handler-directive';
 import { CARD_VERSION } from './const';
 import { localize } from './localize/localize';
+import { Loader } from "@googlemaps/js-api-loader";
 
 /* eslint no-console: 0 */
 console.info(
-  `%c  BOILERPLATE-CARD \n%c  ${localize('common.version')} ${CARD_VERSION}    `,
+  `%c  DIRECTIONS-CARD \n%c  ${localize('common.version')} ${CARD_VERSION}    `,
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
@@ -36,16 +37,16 @@ console.info(
 // This puts your card into the UI card picker dialog
 (window as any).customCards = (window as any).customCards || [];
 (window as any).customCards.push({
-  type: 'boilerplate-card',
-  name: 'Boilerplate Card',
+  type: 'directions-card',
+  name: 'Google maps directions Card',
   description: 'A template custom card for you to create something awesome',
 });
 
 // TODO Name your custom element
-@customElement('boilerplate-card')
-export class BoilerplateCard extends LitElement {
+@customElement('directions-card')
+export class DirectionsCard extends LitElement {
   public static async getConfigElement(): Promise<LovelaceCardEditor> {
-    return document.createElement('boilerplate-card-editor');
+    return document.createElement('directions-card-editor');
   }
 
   public static getStubConfig(): Record<string, unknown> {
@@ -56,10 +57,10 @@ export class BoilerplateCard extends LitElement {
   // https://lit.dev/docs/components/properties/
   @property({ attribute: false }) public hass!: HomeAssistant;
 
-  @state() private config!: BoilerplateCardConfig;
+  @state() private config!: DirectionsCardConfig;
 
   // https://lit.dev/docs/components/properties/#accessors-custom
-  public setConfig(config: BoilerplateCardConfig): void {
+  public setConfig(config: DirectionsCardConfig): void {
     // TODO Check for required fields and that they are of the proper format
     if (!config) {
       throw new Error(localize('common.invalid_configuration'));
@@ -94,7 +95,7 @@ export class BoilerplateCard extends LitElement {
     if (this.config.show_error) {
       return this._showError(localize('common.show_error'));
     }
-
+    console.log(this.config.api_key);
     return html`
       <ha-card
         .header=${this.config.name}
@@ -105,8 +106,69 @@ export class BoilerplateCard extends LitElement {
         })}
         tabindex="0"
         .label=${`Boilerplate: ${this.config.entity || 'No Entity Defined'}`}
-      ></ha-card>
+      ><div id="map" class="map"></div></ha-card>
     `;
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.initMap();
+  }
+
+  private initMap() {
+    console.log()
+    const api_key = this.config.api_key;
+    const loader = new Loader({
+      apiKey: api_key,
+      version: "weekly"
+    });
+    loader.load().then((google) => {
+      const rendererOptions: google.maps.DirectionsRendererOptions = {
+        suppressMarkers: false,
+        hideRouteList: false,
+    
+
+      }
+      const directionsService = new google.maps.DirectionsService();
+      const directionsRenderer = new google.maps.DirectionsRenderer(rendererOptions);
+      const div = this.shadowRoot?.querySelector("#map") as HTMLElement;
+      const map = new google.maps.Map(div);
+      const options: google.maps.MapOptions = {
+        disableDefaultUI: true
+      };
+      map.setOptions(options);
+    
+      directionsRenderer.setMap(map);
+      console.log(map)
+      const trafficLayer = new google.maps.TrafficLayer();
+      trafficLayer.setMap(map);
+
+      const drivingOptions: google.maps.DrivingOptions = {
+        departureTime: new Date(),
+      }
+      const request: google.maps.DirectionsRequest = {
+        origin: this.config.start,
+        destination: this.config.end,
+        provideRouteAlternatives: true,
+        drivingOptions: drivingOptions,
+        optimizeWaypoints: true,
+        travelMode: google.maps.TravelMode.DRIVING
+      };
+      directionsService.route(request, function(result, status) {
+        if (status == 'OK') {
+          console.log(result)
+          directionsRenderer.setDirections(result);
+        }
+      });
+      
+
+      div.style.height=this.offsetWidth+"px";
+      div.style.width=this.offsetWidth+"px";
+      console.log(""+this.offsetWidth);
+      console.log(this)
+
+    })
+
   }
 
   private _handleAction(ev: ActionHandlerEvent): void {

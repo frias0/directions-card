@@ -2,15 +2,15 @@ import { ActionConfig, LovelaceCard, LovelaceCardConfig, LovelaceCardEditor } fr
 
 declare global {
   interface HTMLElementTagNameMap {
-    'boilerplate-card-editor': LovelaceCardEditor;
+    'directions-card-editor': LovelaceCardEditor;
     'hui-error-card': LovelaceCard;
   }
 }
 
 // TODO Add your configuration elements here for type-checking
-export interface BoilerplateCardConfig extends LovelaceCardConfig {
+export interface DirectionsCardConfig extends LovelaceCardConfig {
   type: string;
-  name?: string;
+  api_key: string;
   show_warning?: boolean;
   show_error?: boolean;
   test_gui?: boolean;
@@ -18,4 +18,6 @@ export interface BoilerplateCardConfig extends LovelaceCardConfig {
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
+  start: string
+  end: string
 }
