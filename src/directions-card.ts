@@ -134,7 +134,8 @@ export class DirectionsCard extends LitElement {
       const div = this.shadowRoot?.querySelector("#map") as HTMLElement;
       const map = new google.maps.Map(div);
       const options: google.maps.MapOptions = {
-        disableDefaultUI: true
+        disableDefaultUI: true,
+
       };
       map.setOptions(options);
     
@@ -151,7 +152,6 @@ export class DirectionsCard extends LitElement {
         destination: this.config.end,
         provideRouteAlternatives: true,
         drivingOptions: drivingOptions,
-        optimizeWaypoints: true,
         travelMode: google.maps.TravelMode.DRIVING
       };
       directionsService.route(request, function(result, status) {
